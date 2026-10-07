@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PawAlert – Mockup</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- CSS-only state: role and tab are radio buttons (no JavaScript) -->
+  <input type="radio" name="role" id="r-cit" checked hidden>
+  <input type="radio" name="role" id="r-res" hidden>
+  <input type="radio" name="tab" id="t-report" checked hidden>
+  <input type="radio" name="tab" id="t-map" hidden>
+  <input type="radio" name="tab" id="t-adopt" hidden>
+  <input type="radio" name="tab" id="t-adopted" hidden>
+
+  <header>
+    <div class="logo">🐾 Paw<span>Alert</span> <small>mockup</small></div>
+    <nav>
+      <label class="btn" for="t-report">Report</label>
+      <label class="btn" for="t-map">Live Map</label>
+      <label class="btn" for="t-adopt">Adopt</label>
+      <label class="btn rescuer-only" for="t-adopted">Adopted</label>
+    </nav>
+    <div class="role">
+      <span>Viewing as</span>
+      <label class="btn" for="r-cit">Citizen</label>
+      <label class="btn" for="r-res">Rescuer</label>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Spot an animal in distress? Report it in a minute.</h1>
+      <p>Photo, map pin, short note. Rescuers triage with AI help, and you can follow the case until it's safe.</p>
+    </div>
+
+    <!-- REPORT -->
+    <section class="page" id="p-report">
+      <div class="grid">
+        <div class="card">
+          <h3>New report</h3>
+          <label class="lbl">Photo <input type="file" accept="image/*"></label>
+          <div class="ai">
+            <b>AI suggestion</b> (sample)<br>
+            <span class="tag">🐕 Dog</span><span class="tag">Leg wound</span><span class="tag u-High">High urgency</span>
+            <span class="mut">91% confidence</span>
+          </div>
+          <label class="lbl">Description
+            <textarea rows="3" placeholder="e.g. Dog limping near the market, bleeding from hind leg"></textarea>
+          </label>
+          <label class="lbl">Your name / contact
+            <input type="text" placeholder="Juan, 09xx xxx xxxx">
+          </label>
+          <div class="row top"><button class="btn pri">Submit report</button></div>
+        </div>
+
+        <div class="card">
+          <h3>Drop a pin</h3>
+          <div class="mapbox">
+            <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=125.4002%2C6.8248%2C125.4302%2C6.8428&amp;layer=mapnik" title="Report map" loading="lazy"></iframe>
+            <div class="pins"><span class="pin" style="left:50%;top:50%">📍</span></div>
+          </div>
+          <p class="mut">Pin the exact location of the animal.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE MAP -->
+    <section class="page" id="p-map">
+      <div class="card">
+        <div class="row">
+          <b>Active cases</b>
+          <span class="chip">All status ▾</span>
+          <span class="chip">All urgency ▾</span>
+          <span class="mut">4 shown</span>
+        </div>
+        <div class="mapbox tall">
+          <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=125.4002%2C6.8248%2C125.4302%2C6.8428&amp;layer=mapnik" title="Live map" loading="lazy"></iframe>
+          <div class="pins">
+            <span class="pin" style="left:42%;top:38%">🔴</span>
+            <span class="pin" style="left:58%;top:52%">🟠</span>
+            <span class="pin" style="left:36%;top:66%">🟢</span>
+            <span class="pin" style="left:64%;top:30%">🟠</span>
+          </div>
+        </div>
+        <p class="mut">Pins are placeholders. Drag/zoom the map freely.</p>
+      </div>
+
+      <div class="card case">
+        <a class="thumb p1" href="#photo-1" title="View photo">🐕</a>
+        <div class="body">
+          <b>Dog</b> · Leg wound <span class="tag u-High">High</span><span class="tag">Reported</span>
+          <div>Limping dog near the public market.</div>
+          <div class="mut">Reported by Maria</div>
+          <div class="steps"><i class="d"></i><i></i><i></i><i></i><i></i></div>
+          <div class="row">
+            <a class="btn" href="#photo-1">📷 View photo</a>
+            <button class="btn pri rescuer-only">Claim case</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card case">
+        <a class="thumb p2" href="#photo-2" title="View photo">🐈</a>
+        <div class="body">
+          <b>Cat</b> · Malnourished <span class="tag u-Medium">Medium</span><span class="tag">Claimed</span>
+          <div>Thin kitten under a jeepney stop.</div>
+          <div class="mut">Reported by Ken · Handled by Davao Paws Shelter</div>
+          <div class="steps"><i class="d"></i><i class="d"></i><i></i><i></i><i></i></div>
+          <div class="row">
+            <a class="btn" href="#photo-2">📷 View photo</a>
+            <button class="btn pri rescuer-only">Mark as Rescued</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card case">
+        <a class="thumb p3" href="#photo-3" title="View photo">🐕</a>
+        <div class="body">
+          <b>Dog</b> · Healthy stray <span class="tag u-Low">Low</span><span class="tag">Treated</span>
+          <div>Friendly stray near the school gate.</div>
+          <div class="mut">Reported by Ana · Handled by City Vet Office</div>
+          <div class="steps"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i></i></div>
+          <div class="row">
+            <a class="btn" href="#photo-3">📷 View photo</a>
+            <button class="btn rescuer-only">Vet cleared: upload photo &amp; list for adoption</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card case">
+        <a class="thumb p4" href="#photo-4" title="View photo">🐦</a>
+        <div class="body">
+          <b>Bird</b> · Wing injury <span class="tag u-Medium">Medium</span><span class="tag">Rescued</span>
+          <div>Bird can't fly, found by the highway.</div>
+          <div class="mut">Reported by Leo · Handled by Barangay Rescue</div>
+          <div class="steps"><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i></i></div>
+          <div class="row">
+            <a class="btn" href="#photo-4">📷 View photo</a>
+            <button class="btn pri rescuer-only">Mark as Treated</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADOPT: everyone can view photos, only rescuers can upload/replace -->
+    <section class="page" id="p-adopt">
+      <div class="card">
+        <b>Ready for a home</b>
+        <div class="mut">Only animals cleared by a vet are listed.</div>
+        <div class="mut citizen-only">🔒 Only rescuers can upload or replace photos.</div>
+        <div class="upload rescuer-only">
+          <b>Rescuer: add an animal for adoption</b>
+          <input type="file" accept="image/*">
+          <button class="btn pri">List for adoption</button>
+        </div>
+      </div>
+
+      <div class="card case">
+        <a class="thumb p3" href="#photo-3" title="View photo">🐕</a>
+        <div class="body">
+          <b>Dog</b> · Healthy stray
+          <div>Friendly stray near the school gate.</div>
+          <div class="mut">Cared for by City Vet Office</div>
+          <div class="row top">
+            <button class="btn pri">Adopt / Foster</button>
+            <a class="btn" href="#photo-3">📷 View photo</a>
+            <label class="btn rescuer-only">🔄 Replace photo<input type="file" accept="image/*" hidden></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card case">
+        <a class="thumb p6" href="#photo-6" title="View photo">🐈</a>
+        <div class="body">
+          <b>Cat</b> · Recovering well
+          <div>Playful kitten, vaccinated and dewormed.</div>
+          <div class="mut">Cared for by Davao Paws Shelter</div>
+          <div class="row top">
+            <button class="btn pri">Adopt / Foster</button>
+            <a class="btn" href="#photo-6">📷 View photo</a>
+            <label class="btn rescuer-only">🔄 Replace photo<input type="file" accept="image/*" hidden></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADOPTED (rescuers only) -->
+    <section class="page" id="p-adopted">
+      <div class="card"><b>Adopted animals</b><div class="mut">1 rehomed</div></div>
+      <div class="card case">
+        <a class="thumb p5" href="#photo-5" title="View photo">🐈</a>
+        <div class="body">
+          <b>Cat</b> · Recovered <span class="tag">Adopted</span>
+          <div>Rescued kitten, now in a loving home.</div>
+          <div class="mut">Adopted by Carlo R. · Cared for by Davao Paws Shelter</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="p-denied">
+      <div class="card">
+        <b>Rescuers only</b>
+        <div class="mut">Switch "Viewing as" to Rescuer to see adopted animals.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- PHOTO LIGHTBOXES (CSS :target) -->
+  <div class="lightbox" id="photo-1"><a class="back" href="#x"></a><div class="box"><a class="close" href="#x">✕</a><div class="photo p1"><img src="images/dawg.jpg" alt="Dog with a leg wound"></div><p><b>Dog</b> · Leg wound · sample photo</p></div></div>
+  <div class="lightbox" id="photo-2"><a class="back" href="#x"></a><div class="box"><a class="close" href="#x">✕</a><div class="photo p2"><img src="images/car.jpg" alt="Malnourished kitten"></div><p><b>Cat</b> · Malnourished · sample photo</p></div></div>
+  <div class="lightbox" id="photo-3"><a class="back" href="#x"></a><div class="box"><a class="close" href="#x">✕</a><div class="photo p3"><img src="images/dawg.jpg" alt="Healthy stray dog"></div><p><b>Dog</b> · Healthy stray · sample photo</p></div></div>
+  <div class="lightbox" id="photo-4"><a class="back" href="#x"></a><div class="box"><a class="close" href="#x">✕</a><div class="photo p4">🐦</div><p><b>Bird</b> · Wing injury · sample photo</p></div></div>
+  <div class="lightbox" id="photo-5"><a class="back" href="#x"></a><div class="box"><a class="close" href="#x">✕</a><div class="photo p5"><img src="images/dawg.jpg" alt="Adopted cat"></div><p><b>Cat</b> · Adopted · sample photo</p></div></div>
+  <div class="lightbox" id="photo-6"><a class="back" href="#x"></a><div class="box"><a class="close" href="#x">✕</a><div class="photo p6"><img src="images/hondacivic.jpg" alt="Recovering kitten"></div><p><b>Cat</b> · Recovering well · sample photo</p></div></div>
+
+</div>
+</body>
+</html>
