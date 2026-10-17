@@ -1,19 +1,16 @@
 
 :root {
-  --bg:    #ffffff;
-  --soft:  #f6f8fb;
-  --tint:  #eaf3fb;
-  --tx:    #1f2933;
-  --mut:   #6b7785;
-  --bd:    #e5e9ee;
+  --bg:    #fbfcfd;
+  --soft:  #f4f7fa;
+  --tint:  #e8f0f7;
+  --tx:    #2a3541;
+  --mut:   #66727f;
+  --bd:    #e3e8ee;
 
-  --pri:    #3b82c4;
-  --ok:     #3aa675;
-  --warn:   #f2b354;
-  --danger: #e0575b;
-
-  --radius:    8px;
-  --radius-lg: 12px;
+  --pri:    #3f7fb3;
+  --ok:     #3a8f6b;
+  --warn:   #eebb6a;
+  --danger: #d9626a;
 }
 
 
@@ -26,7 +23,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--tx);
-  font: 16px/1.5 Arial, Helvetica, sans-serif;
+  font: 16px/1.5 "Nunito", Arial, Helvetica, sans-serif;
 }
 
 input,
