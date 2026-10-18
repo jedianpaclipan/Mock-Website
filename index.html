@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PawAlert – Mockup</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <link rel="stylesheet" href="style.css">
+
+  <!-- Browser AI (species detection), Leaflet (maps), then our script. Loaded in this order. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+  <script src="script.js" defer></script>
 </head>
 
 <body>
-<div class="app">
+<!--
+  HOW THIS PAGE WORKS
+  script.js controls everything. Buttons are wired with data attributes:
+    data-go="map"            go to a page
+    data-as="rescuer"        switch role
+    data-action="advance"    run an action (see ACTIONS in script.js)
+  Case status, progress bars and button labels are drawn by script.js from data-status.
+-->
+<div class="app" data-role="citizen">
 
- 
-  <input type="radio" name="role" id="r-cit" checked hidden>
-  <input type="radio" name="role" id="r-res" hidden>
-
-  <input type="radio" name="tab" id="t-home" checked hidden>
-  <input type="radio" name="tab" id="t-report" hidden>
-  <input type="radio" name="tab" id="t-map" hidden>
-  <input type="radio" name="tab" id="t-adopt" hidden>
-  <input type="radio" name="tab" id="t-adopted" hidden>
-
-  <input type="checkbox" id="s-submit" hidden>
-
-
-  <!-- ============ HEADER / NAVIGATION ============ -->
+  <!-- ============ HEADER ============ -->
   <header>
     <div class="logo">🐾 Paw<span>Alert</span> <small>mockup</small></div>
 
     <nav>
-      <label class="btn" for="t-home">Home</label>
-      <label class="btn" for="t-report">Report</label>
-      <label class="btn" for="t-map">Live Map</label>
-      <label class="btn" for="t-adopt">Adopt</label>
-      <label class="btn rescuer-only" for="t-adopted">Adopted</label>
+      <button class="btn" data-go="home">Home</button>
+      <button class="btn" data-go="report">Report</button>
+      <button class="btn" data-go="map">Live Map</button>
+      <button class="btn" data-go="adopt">Adopt</button>
+      <button class="btn rescuer-only" data-go="adopted">Adopted</button>
     </nav>
 
     <div class="role">
       <span>Viewing as</span>
-      <label class="btn" for="r-cit">Citizen</label>
-      <label class="btn" for="r-res">Rescuer</label>
+      <button class="btn" data-as="citizen">Citizen</button>
+      <button class="btn" data-as="rescuer">Rescuer</button>
     </div>
   </header>
 
@@ -54,8 +57,8 @@
         <h1>Spot an animal in distress? Report it in a minute.</h1>
         <p>Photo, map pin, short note. Rescuers triage with AI help, and you can follow the case until it's safe.</p>
         <div class="row top">
-          <label class="btn pri" for="t-report">Report an animal</label>
-          <label class="btn" for="t-map">View live map</label>
+          <button class="btn pri" data-go="report">Report an animal</button>
+          <button class="btn" data-go="map">View live map</button>
         </div>
       </div>
 
@@ -63,69 +66,80 @@
         <div class="card feature">
           <div class="icon">📸</div>
           <h3>Report fast</h3>
-          <p class="mut">Upload a photo and the AI suggests the animal, injury and urgency.</p>
-          <label class="btn" for="t-report">Report →</label>
+          <p class="mut">Upload a photo and the AI suggests the animal. You add the injury and urgency.</p>
+          <button class="btn" data-go="report">Report →</button>
         </div>
 
         <div class="card feature">
           <div class="icon">🗺️</div>
           <h3>Track on the map</h3>
           <p class="mut">See active cases and follow each one from reported to treated.</p>
-          <label class="btn" for="t-map">Live map →</label>
+          <button class="btn" data-go="map">Live map →</button>
         </div>
 
         <div class="card feature">
           <div class="icon">🏡</div>
           <h3>Give a home</h3>
           <p class="mut">Vet-cleared animals are listed here, ready for adoption or fostering.</p>
-          <label class="btn" for="t-adopt">Adopt →</label>
+          <button class="btn" data-go="adopt">Adopt →</button>
         </div>
       </div>
     </section>
 
 
     <!-- ============ REPORT ============ -->
-    <section class="page" id="p-report">
+    <section class="page" id="p-report" hidden>
       <div class="grid">
 
         <div class="card">
           <h3>New report</h3>
 
           <label class="lbl">Photo
-            <input type="file" accept="image/*">
+            <input type="file" id="photo-input" accept="image/*">
           </label>
 
-          <div class="ai">
-            <b>AI suggestion</b> (sample)<br>
-            <span class="tag">🐕 Dog</span>
-            <span class="tag">Leg wound</span>
-            <span class="tag u-High">High urgency</span>
-            <span class="mut">91% confidence</span>
-          </div>
+          <div class="ai" id="ai-box"></div>
+
+          <label class="lbl">Injury (what you can see)
+            <select id="injury">
+              <option>Not sure</option>
+              <option>Wound</option>
+              <option>Possible fracture</option>
+              <option>Malnourished</option>
+              <option>Sick</option>
+              <option>None visible</option>
+            </select>
+          </label>
+
+          <label class="lbl">Urgency
+            <select id="urgency">
+              <option>High</option>
+              <option selected>Medium</option>
+              <option>Low</option>
+            </select>
+          </label>
 
           <label class="lbl">Description
-            <textarea rows="3" placeholder="e.g. Dog limping near the market, bleeding from hind leg"></textarea>
+            <textarea id="description" rows="3" placeholder="e.g. Dog limping near the market, bleeding from hind leg"></textarea>
           </label>
 
           <label class="lbl">Your name / contact
-            <input type="text" placeholder="Juan, 09xx xxx xxxx">
+            <input type="text" id="contact" placeholder="Juan, 09xx xxx xxxx">
           </label>
 
           <div class="row top">
-            <label class="btn pri" for="s-submit">Submit report</label>
+            <button class="btn pri" data-action="submit">Submit report</button>
           </div>
-          <div class="ok-msg">✅ Report submitted! See it on the Live Map.</div>
+          <div class="err" id="form-error" role="alert"></div>
+          <div class="ok-msg" id="report-ok" hidden>
+            ✅ Report submitted! <button class="btn" data-go="map">See it on the Live Map</button>
+          </div>
         </div>
 
         <div class="card">
           <h3>Drop a pin</h3>
-          <div class="mapbox">
-            <iframe
-              src="https://www.openstreetmap.org/export/embed.html?bbox=125.4002%2C6.8248%2C125.4302%2C6.8428&amp;layer=mapnik"
-              title="Report map" loading="lazy"></iframe>
-            <div class="pins"><span class="pin" style="left:50%;top:50%">📍</span></div>
-          </div>
-          <p class="mut">Pin the exact location of the animal.</p>
+          <div class="mapbox" id="report-map"></div>
+          <p class="mut" id="pin-status"></p>
         </div>
 
       </div>
@@ -133,128 +147,124 @@
 
 
     <!-- ============ LIVE MAP ============ -->
-    <section class="page" id="p-map">
+    <section class="page" id="p-map" hidden>
 
       <div class="card">
         <div class="row">
           <b>Active cases</b>
-          <span class="chip">All status ▾</span>
-          <span class="chip">All urgency ▾</span>
-          <span class="mut">4 shown</span>
+          <select class="chip" id="filter-status" aria-label="Filter by status">
+            <option value="all">All status</option>
+            <option>Reported</option>
+            <option>Claimed</option>
+            <option>Rescued</option>
+            <option>Treated</option>
+          </select>
+          <select class="chip" id="filter-urgency" aria-label="Filter by urgency">
+            <option value="all">All urgency</option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+          <span class="mut" id="case-count"></span>
         </div>
 
-        <div class="mapbox tall">
-          <iframe
-            src="https://www.openstreetmap.org/export/embed.html?bbox=125.4002%2C6.8248%2C125.4302%2C6.8428&amp;layer=mapnik"
-            title="Live map" loading="lazy"></iframe>
-          <div class="pins">
-            <span class="pin" style="left:42%;top:38%">🔴</span>
-            <span class="pin" style="left:58%;top:52%">🟠</span>
-            <span class="pin" style="left:36%;top:66%">🟢</span>
-            <span class="pin" style="left:64%;top:30%">🟠</span>
-          </div>
-        </div>
-        <p class="mut">Pins are placeholders. Drag/zoom the map freely.</p>
+        <div class="mapbox tall" id="live-map"></div>
+        <p class="mut">Each pin is a reported case: 🔴 high · 🟠 medium · 🟢 low. Click a pin for details.</p>
       </div>
 
-      <div class="grid">
+      <!-- Status tag, progress bar and action button are drawn by script.js.
+           New reports are added at the top of this grid. -->
+      <div class="grid" id="case-grid">
 
-        <!-- Appears after "Submit report" on the Report page -->
-        <div class="card case sent-case">
-          <a class="thumb p1" href="#photo-1" title="View photo">🐕</a>
-          <div class="body">
-            <b>Your report</b>
-            <span class="tag u-High">High</span>
-            <span class="tag">Reported</span>
-            <div>Just submitted from the Report tab.</div>
-            <div class="steps"><i class="d"></i><i></i><i></i><i></i><i></i></div>
-          </div>
-        </div>
-
-        <!-- Case 1: Reported -> Claimed -->
-        <div class="card case">
-          <a class="thumb p1" href="#photo-1" title="View photo">🐕</a>
+        <div class="card case" data-status="Reported" data-urgency="High" data-lat="6.8368" data-lng="125.4120"
+             data-photo="images/dawgg.jpg" data-caption="Dog · Leg wound · sample photo">
+          <button class="thumb p1" data-action="view" title="View photo">🐕</button>
           <div class="body">
             <b>Dog</b> · Leg wound
             <span class="tag u-High">High</span>
-            <span class="tag before">Reported</span>
-            <span class="tag after">Claimed</span>
-            <div>Limping dog near the public market.</div>
+            <span class="tag" data-status-tag></span>
+            <div class="desc">Limping dog near the public market.</div>
             <div class="mut">Reported by Maria</div>
-            <div class="steps"><i class="d"></i><i class="next"></i><i></i><i></i><i></i></div>
-
+            <div class="steps"></div>
             <div class="row">
-              <a class="btn" href="#photo-1">📷 View photo</a>
-              <label class="btn pri before rescuer-only">Claim case
-                <input type="checkbox" class="toggle" hidden>
-              </label>
-              <span class="btn after rescuer-only">✓ Claimed by you</span>
+              <button class="btn" data-action="view">📷 View photo</button>
+              <button class="btn" data-action="locate">📍 Locate</button>
+              <button class="btn pri rescuer-only" data-action="advance"></button>
             </div>
           </div>
         </div>
 
-        <!-- Case 2: Claimed -> Rescued -->
-        <div class="card case">
-          <a class="thumb p2" href="#photo-2" title="View photo">🐈</a>
+        <div class="card case" data-status="Claimed" data-urgency="Medium" data-lat="6.8340" data-lng="125.4190"
+             data-photo="images/car.jpg" data-caption="Cat · Malnourished · sample photo">
+          <button class="thumb p2" data-action="view" title="View photo">🐈</button>
           <div class="body">
             <b>Cat</b> · Malnourished
             <span class="tag u-Medium">Medium</span>
-            <span class="tag before">Claimed</span>
-            <span class="tag after">Rescued</span>
-            <div>Thin kitten under a jeepney stop.</div>
+            <span class="tag" data-status-tag></span>
+            <div class="desc">Thin kitten under a jeepney stop.</div>
             <div class="mut">Reported by Ken · Handled by Davao Paws Shelter</div>
-            <div class="steps"><i class="d"></i><i class="d"></i><i class="next"></i><i></i><i></i></div>
-
+            <div class="steps"></div>
             <div class="row">
-              <a class="btn" href="#photo-2">📷 View photo</a>
-              <label class="btn pri before rescuer-only">Mark as Rescued
-                <input type="checkbox" class="toggle" hidden>
-              </label>
-              <span class="btn after rescuer-only">✅ Marked as rescued</span>
+              <button class="btn" data-action="view">📷 View photo</button>
+              <button class="btn" data-action="locate">📍 Locate</button>
+              <button class="btn pri rescuer-only" data-action="advance"></button>
             </div>
           </div>
         </div>
 
-        <!-- Case 3: Treated -> Listed for adoption -->
-        <div class="card case">
-          <a class="thumb p3" href="#photo-3" title="View photo">🐕</a>
+        <div class="card case" data-status="Treated" data-urgency="Low" data-lat="6.8310" data-lng="125.4110"
+             data-photo="images/dawg.jpg" data-caption="Dog · Healthy stray · sample photo">
+          <button class="thumb p3" data-action="view" title="View photo">🐕</button>
           <div class="body">
             <b>Dog</b> · Healthy stray
             <span class="tag u-Low">Low</span>
-            <span class="tag before">Treated</span>
-            <span class="tag after">Listed</span>
-            <div>Friendly stray near the school gate.</div>
+            <span class="tag" data-status-tag></span>
+            <div class="desc">Friendly stray near the school gate.</div>
             <div class="mut">Reported by Ana · Handled by City Vet Office</div>
-            <div class="steps"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="next"></i></div>
-
+            <div class="steps"></div>
             <div class="row">
-              <a class="btn" href="#photo-3">📷 View photo</a>
-              <label class="btn before rescuer-only">Vet cleared: upload photo &amp; list for adoption
-                <input type="checkbox" class="toggle" hidden>
-              </label>
-              <span class="btn after rescuer-only">✅ Listed for adoption</span>
+              <button class="btn" data-action="view">📷 View photo</button>
+              <button class="btn" data-action="locate">📍 Locate</button>
+              <button class="btn pri rescuer-only" data-action="advance"></button>
             </div>
           </div>
         </div>
 
-        <!-- Case 4: Rescued -> Treated -->
-        <div class="card case">
-          <a class="thumb p4" href="#photo-4" title="View photo">🐦</a>
+        <div class="card case" data-status="Treated" data-urgency="Low" data-lat="6.8310" data-lng="125.4110"
+             data-photo="images/fordmustang.jpg" data-caption="Car · Healthy stray · sample photo">
+          <button class="thumb p4" data-action="view" title="View photo">🐈</button>
+          <div class="body">
+            <b>Cat</b> · Healthy Stray
+            <span class="tag u-Medium">Medium</span>
+            <span class="tag" data-status-tag></span>
+            <div class="desc">Car, found by the highway.</div>
+            <div class="mut">Reported by Leo · Handled by Barangay Rescue</div>
+            <div class="steps"></div>
+            <div class="row">
+              <button class="btn" data-action="view">📷 View photo</button>
+              <button class="btn" data-action="locate">📍 Locate</button>
+              <button class="btn pri rescuer-only" data-action="advance"></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="card case" data-status="Treated" data-urgency="Low" data-lat="6.8654" data-lng="125.4450"
+             data-photo="images/chimken.jpg" data-caption="Birb · Wing Injury · sample photo">
+          <button class="thumb p4" data-action="view" title="View photo">🐦</button>
           <div class="body">
             <b>Bird</b> · Wing injury
             <span class="tag u-Medium">Medium</span>
-            <span class="tag before">Rescued</span>
-            <span class="tag after">Treated</span>
-            <div>Bird can't fly, found by the highway.</div>
+            <span class="tag" data-status-tag></span>
+            <div class="desc">Bird can't fly, found by the highway.</div>
             <div class="mut">Reported by Leo · Handled by Barangay Rescue</div>
-            <div class="steps"><i class="d"></i><i class="d"></i><i class="d"></i><i class="next"></i><i></i></div>
-
+            <div class="steps"></div>
             <div class="row">
-              <a class="btn" href="#photo-4">📷 View photo</a>
-              <label class="btn pri before rescuer-only">Mark as Treated
-                <input type="checkbox" class="toggle" hidden>
-              </label>
-              <span class="btn after rescuer-only">✅ Marked as treated</span>
+              <button class="btn" data-action="view">📷 View photo</button>
+              <button class="btn" data-action="locate">📍 Locate</button>
+              <button class="btn pri rescuer-only" data-action="advance"></button>
             </div>
           </div>
         </div>
@@ -264,8 +274,8 @@
 
 
     <!-- ============ ADOPT ============ -->
-    <!-- Everyone can view photos; only rescuers can upload or replace them. -->
-    <section class="page" id="p-adopt">
+    <!-- Everyone can view photos; only rescuers can list animals or replace photos. -->
+    <section class="page" id="p-adopt" hidden>
 
       <div class="card">
         <b>Ready for a home</b>
@@ -274,51 +284,29 @@
 
         <div class="upload rescuer-only">
           <b>Rescuer: add an animal for adoption</b>
-          <input type="file" accept="image/*">
-          <label class="btn pri before">List for adoption
-            <input type="checkbox" class="toggle" hidden>
-          </label>
-          <span class="btn after">✅ Listed for adoption</span>
+          <input type="file" id="adopt-file" accept="image/*">
+          <input type="text" id="adopt-note" placeholder="Short note, e.g. Brown puppy, vaccinated">
+          <button class="btn pri" data-action="list-adoption">List for adoption</button>
+          <div class="err" id="adopt-error" role="alert"></div>
+          <div class="mut" id="adopt-ok" hidden>✅ Listed for adoption. See it below.</div>
         </div>
       </div>
 
-      <div class="grid">
+      <div class="card mut" id="adopt-empty" hidden>No animals are ready for adoption right now.</div>
 
-        <div class="card case">
-          <a class="thumb p3" href="#photo-3" title="View photo">🐕</a>
-          <div class="body">
-            <b>Dog</b> · Healthy stray
-            <div>Friendly stray near the school gate.</div>
-            <div class="mut">Cared for by City Vet Office</div>
+      <div class="grid" id="adopt-grid">
 
-            <div class="row top">
-              <label class="btn pri before">Adopt / Foster
-                <input type="checkbox" class="toggle" hidden>
-              </label>
-              <span class="btn after">✅ Request sent</span>
-              <a class="btn" href="#photo-3">📷 View photo</a>
-              <label class="btn rescuer-only">🔄 Replace photo
-                <input type="file" accept="image/*" hidden>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="card case">
-          <a class="thumb p6" href="#photo-6" title="View photo">🐈</a>
+        <div class="card case" data-photo="images/porsche911.jpg" data-caption="Cat · Recovering well · sample photo">
+          <button class="thumb p6" data-action="view" title="View photo">🐈</button>
           <div class="body">
             <b>Cat</b> · Recovering well
-            <div>Playful kitten, vaccinated and dewormed.</div>
+            <div class="desc">Playful kitten, vaccinated and dewormed.</div>
             <div class="mut">Cared for by Davao Paws Shelter</div>
-
             <div class="row top">
-              <label class="btn pri before">Adopt / Foster
-                <input type="checkbox" class="toggle" hidden>
-              </label>
-              <span class="btn after">✅ Request sent</span>
-              <a class="btn" href="#photo-6">📷 View photo</a>
+              <button class="btn pri" data-action="adopt">Adopt / Foster</button>
+              <button class="btn" data-action="view">📷 View photo</button>
               <label class="btn rescuer-only">🔄 Replace photo
-                <input type="file" accept="image/*" hidden>
+                <input type="file" accept="image/*" hidden data-action="replace-photo">
               </label>
             </div>
           </div>
@@ -329,18 +317,18 @@
 
 
     <!-- ============ ADOPTED (rescuers only) ============ -->
-    <section class="page" id="p-adopted">
+    <section class="page" id="p-adopted" hidden>
       <div class="card">
         <b>Adopted animals</b>
-        <div class="mut">1 rehomed</div>
+        <div class="mut" id="adopted-count"></div>
       </div>
 
-      <div class="grid">
-        <div class="card case">
-          <a class="thumb p5" href="#photo-5" title="View photo">🐈</a>
+      <div class="grid" id="adopted-grid">
+        <div class="card case" data-photo="images/dawg.jpg" data-caption="Cat · Adopted · sample photo">
+          <button class="thumb p5" data-action="view" title="View photo">🐈</button>
           <div class="body">
             <b>Cat</b> · Recovered <span class="tag">Adopted</span>
-            <div>Rescued kitten, now in a loving home.</div>
+            <div class="desc">Rescued kitten, now in a loving home.</div>
             <div class="mut">Adopted by Carlo R. · Cared for by Davao Paws Shelter</div>
           </div>
         </div>
@@ -348,7 +336,7 @@
     </section>
 
     <!-- Shown to citizens who open the Adopted tab -->
-    <section class="page" id="p-denied">
+    <section class="page" id="p-denied" hidden>
       <div class="card">
         <b>Rescuers only</b>
         <div class="mut">Switch "Viewing as" to Rescuer to see adopted animals.</div>
@@ -362,67 +350,22 @@
   <footer>
     <div class="logo">🐾 Paw<span>Alert</span></div>
     <div class="foot-links">
-      <label for="t-home">Home</label>
-      <label for="t-report">Report</label>
-      <label for="t-map">Live Map</label>
-      <label for="t-adopt">Adopt</label>
+      <button data-go="home">Home</button>
+      <button data-go="report">Report</button>
+      <button data-go="map">Live Map</button>
+      <button data-go="adopt">Adopt</button>
     </div>
     <div class="mut">© 2026 PawAlert · Davao del Sur · Midterm website mock-up</div>
   </footer>
 
 
-  <!-- ============ PHOTO LIGHTBOXES (opened with CSS :target) ============ -->
-  <div class="lightbox" id="photo-1">
-    <a class="back" href="#x"></a>
+  <!-- ============ PHOTO VIEWER (one lightbox for every photo) ============ -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="back" data-action="close-photo" aria-label="Close photo"></button>
     <div class="box">
-      <a class="close" href="#x">✕</a>
-      <div class="photo p1"><img src="dawg.jpg" alt="Dog with a leg wound"></div>
-      <p><b>Dog</b> · Leg wound · sample photo</p>
-    </div>
-  </div>
-
-  <div class="lightbox" id="photo-2">
-    <a class="back" href="#x"></a>
-    <div class="box">
-      <a class="close" href="#x">✕</a>
-      <div class="photo p2"><img src="car.jpg" alt="Malnourished kitten"></div>
-      <p><b>Cat</b> · Malnourished · sample photo</p>
-    </div>
-  </div>
-
-  <div class="lightbox" id="photo-3">
-    <a class="back" href="#x"></a>
-    <div class="box">
-      <a class="close" href="#x">✕</a>
-      <div class="photo p3"><img src="dawg.jpg" alt="Healthy stray dog"></div>
-      <p><b>Dog</b> · Healthy stray · sample photo</p>
-    </div>
-  </div>
-
-  <div class="lightbox" id="photo-4">
-    <a class="back" href="#x"></a>
-    <div class="box">
-      <a class="close" href="#x">✕</a>
-      <div class="photo p4">🐦</div>
-      <p><b>Bird</b> · Wing injury · sample photo</p>
-    </div>
-  </div>
-
-  <div class="lightbox" id="photo-5">
-    <a class="back" href="#x"></a>
-    <div class="box">
-      <a class="close" href="#x">✕</a>
-      <div class="photo p5"><img src="dawg.jpg" alt="Adopted cat"></div>
-      <p><b>Cat</b> · Adopted · sample photo</p>
-    </div>
-  </div>
-
-  <div class="lightbox" id="photo-6">
-    <a class="back" href="#x"></a>
-    <div class="box">
-      <a class="close" href="#x">✕</a>
-      <div class="photo p6"><img src="hondacivic.jpg" alt="Recovering kitten"></div>
-      <p><b>Cat</b> · Recovering well · sample photo</p>
+      <button class="close" data-action="close-photo" aria-label="Close photo">✕</button>
+      <div class="photo" id="lightbox-photo"></div>
+      <p id="lightbox-caption"></p>
     </div>
   </div>
 
