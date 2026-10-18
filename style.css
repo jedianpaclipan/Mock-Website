@@ -1,16 +1,23 @@
 
+/* ===== 1. Tokens =====
+   Blue = trust and calm (actions, brand).
+   Soft blue/white = clean backgrounds.
+   Red / Yellow / Green = urgency (High / Medium / Low). */
 :root {
-  --bg:    #fbfcfd;
-  --soft:  #f4f7fa;
-  --tint:  #e8f0f7;
-  --tx:    #2a3541;
-  --mut:   #66727f;
-  --bd:    #e3e8ee;
+  --bg:   #fbfcfd;
+  --soft: #f4f7fa;
+  --tint: #e8f0f7;
+  --tx:   #2a3541;
+  --mut:  #66727f;
+  --bd:   #e3e8ee;
 
   --pri:    #3f7fb3;
   --ok:     #3a8f6b;
   --warn:   #eebb6a;
   --danger: #d9626a;
+
+  --radius:    8px;
+  --radius-lg: 14px;
 }
 
 
@@ -28,7 +35,8 @@ body {
 
 input,
 textarea,
-button {
+button,
+select {
   font: inherit;
 }
 
@@ -37,15 +45,24 @@ button {
   outline-offset: 2px;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .mut {
   color: var(--mut);
   font-size: 13px;
 }
 
+.err {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--danger);
+}
 
-/* ===== 3. Layout & grid =====
-   One grid type for the whole site: a COLUMN GRID.
-   .grid = 2 columns, .grid.three = 3 columns, 1 column on phones. */
+
+/* ===== 3. Layout =====
+   One grid type: .grid = 2 columns, .grid.three = 3 columns, 1 column on phones. */
 header {
   display: flex;
   flex-wrap: wrap;
@@ -119,8 +136,8 @@ nav,
 }
 
 .hero {
-  padding: 22px;
   margin-bottom: 16px;
+  padding: 22px;
   border-radius: var(--radius-lg);
   background: var(--tint);
 }
@@ -175,9 +192,35 @@ nav,
   color: #fff;
 }
 
+.btn.active {
+  background: var(--pri);
+  border-color: var(--pri);
+  color: #fff;
+}
+
+.btn:disabled,
+.btn.pri:disabled {
+  background: var(--soft);
+  border-color: var(--bd);
+  color: var(--mut);
+  cursor: default;
+}
+
+.ok-msg {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: var(--tint);
+}
+
 .chip {
   padding: 5px 10px;
   font-size: 13px;
+  color: var(--tx);
   border: 1px solid var(--bd);
   border-radius: var(--radius);
   background: var(--soft);
@@ -193,23 +236,9 @@ nav,
 }
 
 /* Urgency colors */
-.u-High {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: #fff;
-}
-
-.u-Medium {
-  background: var(--warn);
-  border-color: var(--warn);
-  color: #000;
-}
-
-.u-Low {
-  background: var(--ok);
-  border-color: var(--ok);
-  color: #fff;
-}
+.u-High   { background: var(--danger); border-color: var(--danger); color: #fff; }
+.u-Medium { background: var(--warn);   border-color: var(--warn);   color: #000; }
+.u-Low    { background: var(--ok);     border-color: var(--ok);     color: #fff; }
 
 /* Case progress bar: .d = done, .next = filled when the button is clicked */
 .steps {
@@ -239,14 +268,16 @@ nav,
 }
 
 .lbl input,
-.lbl textarea {
+.lbl textarea,
+.lbl select {
   display: block;
   margin-top: 4px;
 }
 
 input[type=text],
 input[type=file],
-textarea {
+textarea,
+.lbl select {
   width: 100%;
   padding: 9px;
   color: var(--tx);
@@ -279,10 +310,30 @@ textarea {
   background: var(--bg);
 }
 
+.preview {
+  display: block;
+  max-width: 100%;
+  max-height: 180px;
+  margin-top: 8px;
+  border-radius: 10px;
+}
 
-/* ===== 6. Map ===== */
+
+.adopt-form {
+  flex-basis: 100%;
+}
+
+.adopt-form input[type=text] {
+  flex: 1;
+  width: auto;
+  min-width: 160px;
+}
+
+
+/* ===== 6. Maps ===== */
 .mapbox {
   position: relative;
+  isolation: isolate;
   height: 300px;
   overflow: hidden;
   border: 1px solid var(--bd);
@@ -294,23 +345,20 @@ textarea {
   margin: 10px 0;
 }
 
-.mapbox iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
 
-.pins {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
 
-.pin {
-  position: absolute;
-  transform: translate(-50%, -100%);
+/* Leaflet pins are emoji (no image files needed) */
+.emoji-pin {
   font-size: 24px;
+  line-height: 28px;
+  text-align: center;
+  background: none;
+  border: 0;
   filter: drop-shadow(0 1px 1px #0006);
+}
+
+.map-msg {
+  padding: 16px;
 }
 
 
@@ -346,6 +394,12 @@ textarea {
   font-size: 96px;
 }
 
+button.thumb {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
 .thumb img {
   width: 100%;
   height: 100%;
@@ -367,9 +421,9 @@ textarea {
 .p6 { background: #dfe8c6; }
 
 
-/* ===== 8. Lightbox (opened with :target) ===== */
+/* ===== 8. Photo viewer (lightbox) ===== */
 .lightbox {
-  display: none;
+  display: flex;
   position: fixed;
   inset: 0;
   z-index: 2000;
@@ -379,13 +433,13 @@ textarea {
   background: #0006;
 }
 
-.lightbox:target {
-  display: flex;
-}
-
 .lightbox .back {
   position: absolute;
   inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
 }
 
 .lightbox .box {
@@ -404,6 +458,7 @@ textarea {
 }
 
 .lightbox .close {
+  cursor: pointer;
   position: absolute;
   top: 8px;
   right: 8px;
@@ -436,84 +491,25 @@ footer {
   font-size: 14px;
 }
 
-.foot-links label {
+.foot-links button {
+  padding: 0;
   color: var(--pri);
   cursor: pointer;
+  border: 0;
+  background: none;
 }
 
 
-/* ===== 10. Tabs, roles & button states (no JavaScript) =====
-   The hidden inputs sit inside .app, so .app:has(input:checked) tells us
-   what is selected. */
-
-/* Highlight the active nav tab and the active role */
-.app:has(#t-home:checked)    header [for=t-home],
-.app:has(#t-report:checked)  header [for=t-report],
-.app:has(#t-map:checked)     header [for=t-map],
-.app:has(#t-adopt:checked)   header [for=t-adopt],
-.app:has(#t-adopted:checked) header [for=t-adopted],
-.app:has(#r-cit:checked)     header [for=r-cit],
-.app:has(#r-res:checked)     header [for=r-res] {
-  background: var(--pri);
-  border-color: var(--pri);
-  color: #fff;
-}
-
-/* Show only the selected page */
-.page {
-  display: none;
-}
-
-.app:has(#t-home:checked)   #p-home,
-.app:has(#t-report:checked) #p-report,
-.app:has(#t-map:checked)    #p-map,
-.app:has(#t-adopt:checked)  #p-adopt,
-.app:has(#r-res:checked):has(#t-adopted:checked) #p-adopted,
-.app:has(#r-cit:checked):has(#t-adopted:checked) #p-denied {
-  display: block;
-}
+/* ===== 10. State: roles, active & disabled =====
+   script.js sets data-role on .app and uses the [hidden] attribute for pages. */
 
 /* Role visibility */
-.app:has(#r-cit:checked) .rescuer-only,
-.app:has(#r-res:checked) .citizen-only {
+.app[data-role="citizen"] .rescuer-only,
+.app[data-role="rescuer"] .citizen-only {
   display: none;
 }
 
-/* Hidden by default: "after click" items and the submitted report */
-.after,
-.sent-case,
-.ok-msg {
-  display: none;
-}
-
-/* Submit report: one global checkbox */
-.app:has(#s-submit:checked) .ok-msg {
-  display: block;
-  margin-top: 12px;
-  padding: 10px;
-  border-radius: var(--radius);
-  background: var(--tint);
-}
-
-.app:has(#s-submit:checked) .sent-case {
-  display: flex;
-}
-
-/* Claim / Mark as ... / List / Adopt: each card owns a .toggle checkbox.
-   .before = what shows first, .after = what shows once clicked. */
-:is(.case, .upload):has(.toggle:checked) .before {
-  display: none;
-}
-
-:is(.case, .upload):has(.toggle:checked) .tag.after {
-  display: inline-block;
-}
-
-:is(.case, .upload):has(.toggle:checked) .btn.after {
-  display: inline-flex;
-  background: var(--soft);
-}
-
-:is(.case, .upload):has(.toggle:checked) .steps .next {
-  background: var(--pri);
+/* Live-map filter (class added by script.js) */
+.filtered-out {
+  display: none !important;
 }
